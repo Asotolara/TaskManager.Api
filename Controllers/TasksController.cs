@@ -1,6 +1,7 @@
 using TaskManager.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using TaskManager.Api.Data;
+using TaskManager.Api.Dtos;
 using Microsoft.Extensions.Validation;
 using System.Reflection.Metadata.Ecma335;
 using Microsoft.AspNetCore.Identity;
@@ -41,8 +42,17 @@ public class TasksController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<TaskItem>> CreateTask(TaskItem task)
+    public async Task<ActionResult<TaskItem>> CreateTask(CreateTaskDto taskDto)
     {
+
+        var task = new TaskItem
+        {
+            Title = taskDto.Title,
+            DueDate = taskDto.DueDate,
+            IsCompleted = false
+
+        };
+
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
 
@@ -50,7 +60,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateTask(int id, TaskItem updatedTask)
+    public async Task<IActionResult> UpdateTask(int id, UpdateTaskDto updatedTask)
     {
         var task  = await _context.Tasks.FindAsync(id);
 
