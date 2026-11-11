@@ -21,10 +21,20 @@ public class TasksController : ControllerBase
         _context = context;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<List<TaskItem>>> GetAllTasks()
+    private static TaskDto ToDto(TaskItem t) => new TaskDto
     {
-        var tasks = await _context.Tasks.ToListAsync();
+        Id = t.Id,
+        Title = t.Title,
+        DueDate = t.DueDate,
+        IsCompleted = t.IsCompleted
+    };
+
+
+    [HttpGet]
+    public async Task<ActionResult<List<TaskDto>>> GetAllTasks()
+    {
+
+        var tasks = await _context.Tasks.Select(t => ToDto(t)).ToListAsync();
 
         return tasks;
     }
@@ -32,6 +42,7 @@ public class TasksController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TaskItem>> GetTaskById(int id)
     {
+
         var task = await _context.Tasks.FindAsync(id);
         if (task == null)
         {
