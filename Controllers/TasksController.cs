@@ -19,11 +19,12 @@ public class TasksController : ControllerBase
     {
         _context = context;
     }
-    
+
     [HttpGet]
     public async Task<ActionResult<List<TaskItem>>> GetAllTasks()
     {
         var tasks = await _context.Tasks.ToListAsync();
+
         return tasks;
     }
 
@@ -31,7 +32,6 @@ public class TasksController : ControllerBase
     public async Task<ActionResult<TaskItem>> GetTaskById(int id)
     {
         var task = await _context.Tasks.FindAsync(id);
-
         if (task == null)
         {
             return NotFound();
@@ -39,4 +39,15 @@ public class TasksController : ControllerBase
 
         return task;
     }
+
+    [HttpPost]
+    public async Task<ActionResult<TaskItem>> CreateTask(TaskItem task)
+    {
+        _context.Tasks.Add(task);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+    }
+
+    
 }
