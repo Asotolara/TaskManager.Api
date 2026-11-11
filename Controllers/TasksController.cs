@@ -49,5 +49,37 @@ public class TasksController : ControllerBase
         return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
     }
 
-    
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateTask(int id, TaskItem updatedTask)
+    {
+        var task  = await _context.Tasks.FindAsync(id);
+
+        if(task is null)
+        {
+            return NotFound();
+        }
+
+        task.Title = updatedTask.Title;
+        task.DueDate = updatedTask.DueDate;
+        task.IsCompleted = updatedTask.IsCompleted;
+        
+        await _context.SaveChangesAsync();
+        return NoContent();
+
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTask(int id)
+    {
+        var task = await _context.Tasks.FindAsync(id);
+
+        if(task is null)
+        {
+            return NotFound();
+        }
+
+        _context.Tasks.Remove(task);
+        await  _context.SaveChangesAsync();
+        return NoContent();
+    }
 }
