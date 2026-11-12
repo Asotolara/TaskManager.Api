@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.VisualBasic;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -34,13 +35,19 @@ public class TasksController : ControllerBase
     public async Task<ActionResult<List<TaskDto>>> GetAllTasks()
     {
 
-        var tasks = await _context.Tasks.Select(t => ToDto(t)).ToListAsync();
+        var tasks = await _context.Tasks.Select(t => new TaskDto
+        {
+            Id = t.Id,
+            Title = t.Title,
+            DueDate = t.DueDate,
+            IsCompleted = t.IsCompleted
+        }).ToListAsync();
 
         return tasks;
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TaskItem>> GetTaskById(int id)
+    public async Task<ActionResult<TaskDto>> GetTaskById(int id)
     {
 
         var task = await _context.Tasks.FindAsync(id);
@@ -49,11 +56,13 @@ public class TasksController : ControllerBase
             return NotFound();
         }
 
-        return task;
+        var result = ToDto(task);
+        
+        return result;
     }
 
     [HttpPost]
-    public async Task<ActionResult<TaskItem>> CreateTask(CreateTaskDto taskDto)
+    public async Task<ActionResult<TaskDto>> CreateTask(CreateTaskDto taskDto)
     {
 
         var task = new TaskItem
@@ -67,7 +76,7 @@ public class TasksController : ControllerBase
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+        return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, ToDto(task));
     }
 
     [HttpPut("{id}")]
