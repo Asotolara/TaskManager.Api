@@ -1,87 +1,57 @@
-using TaskManager.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using TaskManager.Api.Dtos;
-using TaskManager.Api.Repositories;
-using System.Reflection.Metadata.Ecma335;
+using TaskManager.Api.Services;
+
 
 [ApiController]
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
 {
 
-    private readonly ITaskRepository _taskRepository;
+    private readonly ITaskService _taskService;
 
-    public TasksController(ITaskRepository taskRepository)
+    public TasksController(ITaskService taskService)
     {
-        _taskRepository = taskRepository;
+        _taskService = taskService;
     }
-
-    private static TaskDto ToDto(TaskItem t) => new TaskDto
-    {
-        Id = t.Id,
-        Title = t.Title,
-        DueDate = t.DueDate,
-        IsCompleted = t.IsCompleted
-    };
-
 
     [HttpGet]
     public async Task<ActionResult<List<TaskDto>>> GetAllTasks()
     {
-        var tasks = await _taskRepository.GetAllAsync();
-        return tasks.Select(ToDto).ToList();
-
-        
+         return await _taskService.GetAllAsync();
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<TaskDto>> GetTaskById(int id)
     {
 
-        var task = await _taskRepository.GetByIdAsync(id);
-        if (task == null)
+        var task = await _taskService.GetByIdAsync(id);
+        if (task is null)
         {
             return NotFound();
         }
-
-        var result = ToDto(task);
         
-        return result;
+        return task;
     }
 
     [HttpPost]
     public async Task<ActionResult<TaskDto>> CreateTask(CreateTaskDto taskDto)
     {
 
-        var task = new TaskItem
-        {
-            Title = taskDto.Title,
-            DueDate = taskDto.DueDate,
-            IsCompleted = false
-
-        };
-
-        await _taskRepository.AddAsync(task);
-        
-
-        return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, ToDto(task));
+        var createdTask = await _taskService.CreateAsync(taskDto);
+        return CreatedAtAction(nameof(GetTaskById), new { id = createdTask.Id }, createdTask);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateTask(int id, UpdateTaskDto updatedTask)
     {
-        var task  = await _taskRepository.GetByIdAsync(id);
-
-        if(task is null)
+        var taskFound  = await _taskService.UpdateAsync(id, updatedTask);
+        if (!taskFound)
         {
             return NotFound();
-        }
+        } 
 
-        task.Title = updatedTask.Title;
-        task.DueDate = updatedTask.DueDate;
-        task.IsCompleted = updatedTask.IsCompleted;
-        
-        await _taskRepository.UpdateAsync(task);
+
         return NoContent();
 
     }
@@ -89,14 +59,12 @@ public class TasksController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTask(int id)
     {
-        var task = await _taskRepository.GetByIdAsync(id);
+        var taskDeleted = await _taskService.DeleteAsync(id);
 
-        if(task is null)
+        if(!taskDeleted)
         {
             return NotFound();
         }
-
-        await _taskRepository.DeleteAsync(task);
         return NoContent();
     }
 }
