@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using TaskManager.Api.Dtos;
 using TaskManager.Api.Services;
@@ -18,7 +19,7 @@ public class TasksController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<TaskDto>>> GetAllTasks()
     {
-         return await _taskService.GetAllAsync();
+        return await _taskService.GetAllAsync();
     }
 
     [HttpGet("{id}")]
