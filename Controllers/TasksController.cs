@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskManager.Api.Dtos;
@@ -11,6 +12,8 @@ public class TasksController : ControllerBase
 
     private readonly ITaskService _taskService;
 
+    private string? GetUserId() => User.FindFirstValue("sub");
+
     public TasksController(ITaskService taskService)
     {
         _taskService = taskService;
@@ -19,14 +22,25 @@ public class TasksController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<TaskDto>>> GetAllTasks()
     {
-        return await _taskService.GetAllAsync();
+        var userId = GetUserId();
+        if(userId is null)
+        {
+            return Unauthorized();
+        }
+        return await _taskService.GetAllAsync(userId);
     }
+
 
     [HttpGet("{id}")]
     public async Task<ActionResult<TaskDto>> GetTaskById(int id)
     {
+        var userId = GetUserId();
+        if(userId is null)
+        {
+            return Unauthorized();
+        }
 
-        var task = await _taskService.GetByIdAsync(id);
+        var task = await _taskService.GetByIdAsync(id, userId);
         if (task is null)
         {
             return NotFound();
@@ -38,15 +52,24 @@ public class TasksController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TaskDto>> CreateTask(CreateTaskDto taskDto)
     {
-
-        var createdTask = await _taskService.CreateAsync(taskDto);
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+        var createdTask = await _taskService.CreateAsync(taskDto, userId);
         return CreatedAtAction(nameof(GetTaskById), new { id = createdTask.Id }, createdTask);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateTask(int id, UpdateTaskDto updatedTask)
     {
-        var taskFound  = await _taskService.UpdateAsync(id, updatedTask);
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+        var taskFound  = await _taskService.UpdateAsync(id, updatedTask, userId);
         if (!taskFound)
         {
             return NotFound();
@@ -60,7 +83,12 @@ public class TasksController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTask(int id)
     {
-        var taskDeleted = await _taskService.DeleteAsync(id);
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+        var taskDeleted = await _taskService.DeleteAsync(id, userId);
 
         if(!taskDeleted)
         {

@@ -5,7 +5,7 @@ using TaskManager.Api.Repositories;
 
 namespace TaskManager.Api.Services;
 
-public class TaskService: ITaskService
+public class TaskService : ITaskService
 {
 
     private readonly ITaskRepository _taskRepository;
@@ -23,31 +23,32 @@ public class TaskService: ITaskService
         IsCompleted = t.IsCompleted
     };
 
-    public async Task<List<TaskDto>> GetAllAsync()
+    public async Task<List<TaskDto>> GetAllAsync(string userId)
     {
-        var tasks = await _taskRepository.GetAllAsync();
+        var tasks = await _taskRepository.GetAllByOwnerAsync(userId);
         return tasks.Select(ToDto).ToList();
     }
 
-    public async Task<TaskDto?> GetByIdAsync(int id)
+    public async Task<TaskDto?> GetByIdAsync(int id, string userId)
     {
         var task = await _taskRepository.GetByIdAsync(id);
-        if(task is null)
+        if (task is null || task.OwnerId != userId)
         {
             return null;
         }
 
         return ToDto(task);
-        
+
     }
 
-    public async Task<TaskDto> CreateAsync(CreateTaskDto taskDto)
+    public async Task<TaskDto> CreateAsync(CreateTaskDto taskDto, string userId)
     {
         var task = new TaskItem
         {
             Title = taskDto.Title,
             DueDate = taskDto.DueDate,
-            IsCompleted = false
+            IsCompleted = false,
+            OwnerId = userId
 
         };
 
@@ -55,11 +56,11 @@ public class TaskService: ITaskService
         return ToDto(task);
     }
 
-    public async Task<bool> UpdateAsync(int id, UpdateTaskDto updatedTask)
+    public async Task<bool> UpdateAsync(int id, UpdateTaskDto updatedTask, string userId)
     {
-        var task  = await _taskRepository.GetByIdAsync(id);
+        var task = await _taskRepository.GetByIdAsync(id);
 
-        if(task is null)
+        if (task is null || task.OwnerId != userId)
         {
             return false;
         }
@@ -72,11 +73,11 @@ public class TaskService: ITaskService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, string userId)
     {
         var task = await _taskRepository.GetByIdAsync(id);
 
-        if(task is null)
+        if(task is null || task.OwnerId != userId)
         {
             return false;
         }

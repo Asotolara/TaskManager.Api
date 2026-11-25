@@ -17,6 +17,12 @@ public class TaskRepository : ITaskRepository
         return await _context.Tasks.ToListAsync();
     }
 
+    public async Task<List<TaskItem>> GetAllByOwnerAsync(string ownerId)
+    {
+        return await _context.Tasks.Where(t => t.OwnerId == ownerId)
+            .ToListAsync();
+    }
+
     public async Task<TaskItem?> GetByIdAsync(int id)
     {
         return await _context.Tasks.FindAsync(id);

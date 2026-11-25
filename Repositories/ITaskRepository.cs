@@ -4,6 +4,7 @@ public interface ITaskRepository
 {
     Task<List<TaskItem>> GetAllAsync();
     Task<TaskItem?> GetByIdAsync(int id);
+    Task<List<TaskItem>> GetAllByOwnerAsync(string ownerId);
     Task AddAsync(TaskItem task);
     Task UpdateAsync(TaskItem task);
     Task DeleteAsync(TaskItem task);
